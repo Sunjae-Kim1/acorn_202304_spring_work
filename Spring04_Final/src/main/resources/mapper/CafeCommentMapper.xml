@@ -40,7 +40,7 @@
    </select>
    <update id="update" parameterType="cafeCommentDto">
       UPDATE board_cafe_comment
-      SET content=#{content}
+      SET content=#{content} , regdate=sysdate
       WHERE num=#{num}
    </update>
    <select id="getData" parameterType="int" resultType="cafeCommentDto">
