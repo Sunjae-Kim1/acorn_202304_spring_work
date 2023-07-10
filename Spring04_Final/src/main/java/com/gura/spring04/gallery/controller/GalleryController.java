@@ -1,22 +1,42 @@
 package com.gura.spring04.gallery.controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.gura.spring04.gallery.dto.GalleryDto;
 import com.gura.spring04.gallery.service.GalleryService;
+
+import oracle.jdbc.proxy.annotation.Post;
 
 @Controller
 public class GalleryController {
 	
 	@Autowired
 	private GalleryService service;
+	
+	@RequestMapping(method = RequestMethod.POST , value = "/gallery/ajax_upload")
+	@ResponseBody
+	public Map<String , Object> ajaxUpload(GalleryDto dto , HttpServletRequest request){
+		// 서비스를 이용해서 업로드된 이미지를 저장하고
+		service.saveImage(dto, request);
+		// {"isSuccess": true} 형식의 JSON 문자열 응답
+		Map<String , Object> map = new HashMap<String, Object>();
+		map.put("isSuccess", true);
+		return map;
+	}
+	
+	@RequestMapping("/gallery/upload_form3")
+	public String uploadform3(){
+		return "gallery/upload_form3";
+	}
 	
 	@RequestMapping("/gallery/upload_form2")
 	public String uploadform2(){

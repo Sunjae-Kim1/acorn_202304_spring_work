@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "movie">
+	<select id = "getList" parameterType = "movieDto" resultType = "movieDto">
+		select *
+		from
+			(
+			select result1.* , rownum as rnum
+			from
+				(
+				select num , writer , caption , imagePath , regdate
+				from movie_gallery
+				order by num desc
+				)
+			result1
+			)
+		where rnum between #{startRowNum} and #{endRowNum}
+	</select>
+	<select id = "getCount" resultType = "int">
+		select nvl(max(rownum) , 0)
+		from movie_gallery
+	</select>
+	<insert id = "insert" parameterType = "movieDto">
+		INSERT INTO movie_gallery
+      	(num, writer, caption, imagePath, regdate)
+      	VALUES(movie_gallery_seq.NEXTVAL, #{writer}, #{caption}, #{imagePath}, SYSDATE)
+	</insert>
+	<select id = "getData" parameterType = "int" resultType = "movieDto">
+		select *
+		from
+			(
+			select num , writer , caption , imagePath , regdate ,
+			lag(num , 1 , 0) over (order by num desc) as prevNum ,
+			lead(num , 1 , 0) over (order by num desc) as nextNum
+			from movie_gallery
+			order by num desc
+			)
+		where num = #{num}
+	</select>
+	<delete id = "delete" parameterType = "int">
+		delete from movie_gallery
+		where num = #{num}
+	</delete>
+	<update id = "update" parameterType = "movieDto">
+		update movie_gallery
+		set caption = #{caption} , regdate = sysdate
+		where num = #{num}
+	</update>
+</mapper>

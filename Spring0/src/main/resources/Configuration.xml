@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!-- 자주 사용하는 Type 의 별칭을 등록해놓고 Mapper.xml 에서 사용 가능 -->
+  	<typeAliases>
+		<typeAlias type = "com.kim.spring0.user.dto.UserDto" alias = "userDto"/>
+		<typeAlias type = "com.kim.spring0.movie.dto.MovieDto" alias = "movieDto"/>
+		<typeAlias type = "com.kim.spring0.free.dto.FreeDto" alias = "freeDto"/>
+  	</typeAliases>
+  	
+  	<!-- SQL 문을 작성한 Mapper XML 문서가 어디에 있는지 목록 작성 -->
+  	<mappers>
+  		<mapper resource = "mapper/UserMapper.xml"/>
+  		<mapper resource = "mapper/MovieMapper.xml"/>
+  		<mapper resource = "mapper/FreeMapper.xml"/>
+  	</mappers>
+</configuration>
