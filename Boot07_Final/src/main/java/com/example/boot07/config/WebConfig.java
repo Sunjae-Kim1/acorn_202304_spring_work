@@ -8,8 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.example.boot07.interceptor.LoginInterceptor;
 
-
-
 /*
  * [ Spring MVC 관련 설정 ]
  * 
@@ -32,11 +30,12 @@ public class WebConfig implements WebMvcConfigurer{
 		// 메소드의 인자로 번달되는 InterceptorRegistry 객체를 이용해서 Interceptor 를 등록하면 된다.
 		
 		registry.addInterceptor(loginInter)
-		.addPathPatterns("/users/*")
-		.excludePathPatterns("/users/loginform")
-		.excludePathPatterns("/users/login")
-		.excludePathPatterns("/users/signup")
-		.excludePathPatterns("/users/signup_form");
+		.addPathPatterns("/users/*" , "/cafe/*")
+		.excludePathPatterns("/users/loginform" , "/users/login" , "/users/signup" , "/users/signup_form" ,
+				"/cafe/list" , "/cafe/detail" , "/cafe/ajax_comment_list");
+//		.excludePathPatterns("/users/login")
+//		.excludePathPatterns("/users/signup")
+//		.excludePathPatterns("/users/signup_form");
 	}
 	
 	// webapp/resources 폴더 설정

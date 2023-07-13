@@ -2,20 +2,15 @@ package com.example.boot07.users.controller;
 
 import java.net.URLEncoder;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
-
 import com.example.boot07.users.dto.UsersDto;
 import com.example.boot07.users.service.UsersService;
 
@@ -28,19 +23,26 @@ public class UsersController {
 		
 		// 회원 탈퇴 요청 처리
 		@GetMapping("/users/delete")
-		public ModelAndView delete(HttpSession session , ModelAndView mView) {
-			service.deleteUser(session, mView);
-			mView.setViewName("users/delete");
-			return mView;
+		public String delete(HttpSession session , Model model) {
+			/*
+			 * 컨트롤러의 메소드로 전달받은 Model 객체를 서비스 객체에 전달해서
+			 * View Page 에 전달할 Data ( 모델 ) 이 담기도록 해야한다.
+			 * Model 객체에 addAttribute() 해서 담은 Data 는 Spring 프레임워크가
+			 * HttpServetRequest 객체에 setAttribute() 해서 대신 담아준다.
+			 * 따라서 forward 이동된 ( 응답을 위임 받은 ) JSP 페이지에서 해당 Data 를 사용할 수 있는 것이다.
+			 */
+			service.deleteUser(session, model);
+			
+			// View Page 의 정보를 리턴 ( forward 이동될 JSP 페이지의 위치 ) 
+			return "users/delete";
 		}
 		
 		@PostMapping("/users/update")
-		public ModelAndView update(UsersDto dto , HttpSession session , ModelAndView mView) {
+		public String update(UsersDto dto , HttpSession session , Model model) {
 			// 서비스를 이용해서 개인정보를 수정하고
 			service.updateUser(dto, session);
 			// 개인정보 보기로 리다이렉트 이동한다.
-			mView.setViewName("redirect:/users/info");
-			return mView;
+			return "redirect:/users/info";
 		}
 		
 		// AJAX 프로필 사진 업로드 요청 처리
@@ -53,20 +55,18 @@ public class UsersController {
 		
 		// 개인정보 수정 폼 요청 처리
 		@GetMapping("/users/updateform")
-		public ModelAndView updateform(HttpSession session , ModelAndView mView) {
-			service.getInfo(session, mView);
-			mView.setViewName("users/updateform");
-			return mView;
+		public String updateform(HttpSession session , Model model) {
+			service.getInfo(session, model);
+			return "users/updateform";
 		}
 		
 		// 비밀번호 수정 요청 처리
 		@PostMapping("/users/pwd_update")
-		public ModelAndView pwdUpdate(UsersDto dto , ModelAndView mView , HttpSession session) {
+		public String pwdUpdate(UsersDto dto , Model model , HttpSession session) {
 			// 서비스에 필요한 객체의 참조값을 전달해서 비밀번호 수정 로직을 처리한다.
-			service.updateUserPwd(session, dto, mView);
+			service.updateUserPwd(session, dto, model);
 			//View Page 로 forward 이동해서 응답한다.
-			mView.setViewName("users/pwd_update");
-			return mView;
+			return "users/pwd_update";
 		}
 		
 		// 비밀번호 수정 폼 요청 처리
@@ -77,11 +77,9 @@ public class UsersController {
 		
 		// 개인 정보 보기 요청 처리
 		@GetMapping("/users/info")
-		public ModelAndView info(HttpSession session , ModelAndView mView) {
-			service.getInfo(session , mView);
-			
-			mView.setViewName("users/info");
-			return mView;
+		public String info(HttpSession session , Model model) {
+			service.getInfo(session , model);
+			return "users/info";
 		}
 		
 		@GetMapping("/users/logout")
@@ -93,7 +91,7 @@ public class UsersController {
 		
 		// 로그인 폼 요청 처리
 		@PostMapping("/users/login")
-		public ModelAndView login(ModelAndView mView , UsersDto dto , String url , HttpSession session) {
+		public String login(Model model , UsersDto dto , String url , HttpSession session) {
 			/*
 			* 서비스에서 비즈니스 로직을 처리할때 필요로 하는 객체를 컨트롤러에서 직접 전달해 주어야 한다.
 			* 주로 , HttpServletRequest , HttpServletResponse , HttpSession , ModelAndView
@@ -103,12 +101,11 @@ public class UsersController {
 				
 			// 로그인 후에 가야할 목적지 정보를 인코딩하지 않은 것과 인코딩 한 것 모두 ModelAndView 객체에 담고
 			String encodedUrl = URLEncoder.encode(url);
-			mView.addObject("url" , url);
-			mView.addObject("encodedUrl" , encodedUrl);
+			model.addAttribute("url" , url);
+			model.addAttribute("encodedUrl" , encodedUrl);
 				
 			// View Page 로 forward 이동해서 응답
-			mView.setViewName("users/login");
-			return mView;
+			return "users/login";
 		}
 		
 		// 로그인 폼 요청 처리
@@ -119,12 +116,11 @@ public class UsersController {
 		
 		// 회원가입 요청처리
 		@PostMapping("/users/signup")
-		public ModelAndView signup(ModelAndView mView , UsersDto dto) {
+		public String signup(Model model , UsersDto dto) {
 			// 서비스를 이용하여 DB 에 저장하고
 			service.addUser(dto);
 			// View Page 로 forward 이동해서 응답
-			mView.setViewName("users/signup");
-			return mView;
+			return "users/signup";
 		}
 		
 		/*
