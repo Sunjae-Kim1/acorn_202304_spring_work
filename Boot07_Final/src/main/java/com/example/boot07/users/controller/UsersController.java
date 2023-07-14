@@ -1,13 +1,22 @@
 package com.example.boot07.users.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,27 +27,48 @@ import com.example.boot07.users.service.UsersService;
 public class UsersController {
 	
 	// 의존객체 주입 받기
-		@Autowired
-		private UsersService service;
+	@Autowired
+	private UsersService service;
 		
-		// 회원 탈퇴 요청 처리
-		@GetMapping("/users/delete")
-		public String delete(HttpSession session , Model model) {
-			/*
-			 * 컨트롤러의 메소드로 전달받은 Model 객체를 서비스 객체에 전달해서
-			 * View Page 에 전달할 Data ( 모델 ) 이 담기도록 해야한다.
-			 * Model 객체에 addAttribute() 해서 담은 Data 는 Spring 프레임워크가
-			 * HttpServetRequest 객체에 setAttribute() 해서 대신 담아준다.
-			 * 따라서 forward 이동된 ( 응답을 위임 받은 ) JSP 페이지에서 해당 Data 를 사용할 수 있는 것이다.
-			 */
-			service.deleteUser(session, model);
+	@Value("${file.location}")
+	private String fileLocation;
+	
+	@GetMapping(value = "/users/images/{imageName}" , 
+				produces = {MediaType.IMAGE_GIF_VALUE , MediaType.IMAGE_JPEG_VALUE , MediaType.IMAGE_PNG_VALUE}
+			)
+	@ResponseBody
+	public byte[] getImage(@PathVariable("imageName") String imageName) throws IOException {
+		// imageName 에는 응답해줄 이미지의 이름이 들어있다.
+		
+		// 읽어들일 파일의 경로
+		// C:/acorn2023/upload/kim1.png 형식의 경로
+		String absolutePath = fileLocation + File.separator + imageName;
+		
+		// 파일에서 읽어들일 InputStream
+		InputStream is = new FileInputStream(absolutePath);
+		
+		// fileLocation 필드에는 파일이 저장되어 있는 서버의 파일 시스템에서의 위치가 들어있다.
+		return IOUtils.toByteArray(is);
+	}
+		
+	// 회원 탈퇴 요청 처리
+	@GetMapping("/users/delete")
+	public String delete(HttpSession session , Model model) {
+		/*
+		* 컨트롤러의 메소드로 전달받은 Model 객체를 서비스 객체에 전달해서
+		* View Page 에 전달할 Data ( 모델 ) 이 담기도록 해야한다.
+		* Model 객체에 addAttribute() 해서 담은 Data 는 Spring 프레임워크가
+		* HttpServetRequest 객체에 setAttribute() 해서 대신 담아준다.
+		* 따라서 forward 이동된 ( 응답을 위임 받은 ) JSP 페이지에서 해당 Data 를 사용할 수 있는 것이다.
+		*/
+		service.deleteUser(session, model);
 			
-			// View Page 의 정보를 리턴 ( forward 이동될 JSP 페이지의 위치 ) 
-			return "users/delete";
-		}
+		// View Page 의 정보를 리턴 ( forward 이동될 JSP 페이지의 위치 ) 
+		return "users/delete";
+	}
 		
-		@PostMapping("/users/update")
-		public String update(UsersDto dto , HttpSession session , Model model) {
+	@PostMapping("/users/update")
+	public String update(UsersDto dto , HttpSession session , Model model) {
 			// 서비스를 이용해서 개인정보를 수정하고
 			service.updateUser(dto, session);
 			// 개인정보 보기로 리다이렉트 이동한다.

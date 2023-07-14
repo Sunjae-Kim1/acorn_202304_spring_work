@@ -3,18 +3,16 @@ package com.example.boot07.users.service;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
-
 import com.example.boot07.users.dao.UsersDao;
 import com.example.boot07.users.dto.UsersDto;
 
@@ -22,6 +20,10 @@ import com.example.boot07.users.dto.UsersDto;
 public class UsersServiceImpl implements UsersService{
 	@Autowired
 	private UsersDao dao;
+	
+	// application.properties 문서에 있는 파일의 저장위치 설정 정보 읽어오기
+	@Value("${file.location}")
+	private String fileLocation;
 
 	@Override
 	public void addUser(UsersDto dto) {
@@ -104,10 +106,13 @@ public class UsersServiceImpl implements UsersService{
 	      String orgFileName=mFile.getOriginalFilename();
 	      //upload 폴더에 저장할 파일명을 직접구성한다.
 	      // 1234123424343xxx.jpg
-	      String saveFileName=System.currentTimeMillis()+orgFileName;
+	      // String saveFileName=System.currentTimeMillis()+orgFileName;
+	      // 절대로 중복되지 않는 유일한 파일 명을 구성한다.
+	      String saveFileName = UUID.randomUUID().toString() + orgFileName;
 	      
 	      // webapp/upload 폴더까지의 실제 경로 얻어내기 
-	      String realPath=request.getServletContext().getRealPath("/resources/upload");
+	      // String realPath=request.getServletContext().getRealPath("/resources/upload");
+	      String realPath = fileLocation;
 	      // upload 폴더가 존재하지 않을경우 만들기 위한 File 객체 생성
 	      File upload=new File(realPath);
 	      if(!upload.exists()) {//만일 존재 하지 않으면
@@ -124,7 +129,8 @@ public class UsersServiceImpl implements UsersService{
 	      
 	      // json 문자열을 출력하기 위한 Map 객체 생성하고 정보 담기 
 	      Map<String, Object> map=new HashMap<String, Object>();
-	      map.put("imagePath", "/resources/upload/"+saveFileName);
+	      // map.put("imagePath", "/resources/upload/"+saveFileName);
+	      map.put("imagePath", "/users/images/" + saveFileName);
 	      
 	      return map;
 	}
