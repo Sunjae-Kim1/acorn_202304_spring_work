@@ -1,12 +1,17 @@
-package com.example.boot06.file.controller;
+package com.example.boot07.file.controller;
+
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import com.example.boot06.file.dto.FileDto;
-import com.example.boot06.file.service.FileService;
+import com.example.boot07.file.dto.FileDto;
+import com.example.boot07.file.service.FileService;
 
 @Controller
 public class FileController {
@@ -37,13 +42,12 @@ public class FileController {
 	      return mView;
 	   }
 	   
+	   // 다운로드 해줄 파일의 번호가 요청파라미터로 전달된다.
 	   @RequestMapping("/file/download")
-	   public ModelAndView download(int num, ModelAndView mView) {
-		   // num 은 다운로드 해줄 파일 번호 ( PK )
-	      service.getFileData(num, mView);
-	      // 응답을 할 bean 의 이름을 설정 
-	      mView.setViewName("fileDownView");
-	      return mView;
+	   public ResponseEntity<InputStreamResource> download(int num) throws FileNotFoundException, UnsupportedEncodingException {
+		   
+		   // 다운로드 해줄 파일의 번호를 서비스에 전달해서 ResponseEntity 객체를 얻어내서 리턴한다.
+		   return service.getFileData(num);
 	   }
 	   
 	   @RequestMapping("/file/delete")

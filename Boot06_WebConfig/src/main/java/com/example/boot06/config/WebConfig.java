@@ -30,9 +30,8 @@ public class WebConfig implements WebMvcConfigurer{
 		// 메소드의 인자로 번달되는 InterceptorRegistry 객체를 이용해서 Interceptor 를 등록하면 된다.
 		
 		registry.addInterceptor(loginInter)
-		.addPathPatterns("/users/*")
-		.excludePathPatterns("/users/loginform")
-		.excludePathPatterns("/users/login");
+		.addPathPatterns("/users/*" , "/file/*")
+		.excludePathPatterns("/users/loginform" , "/users/login" , "/file/download");
 	}
 	
 	// webapp/resources 폴더 설정

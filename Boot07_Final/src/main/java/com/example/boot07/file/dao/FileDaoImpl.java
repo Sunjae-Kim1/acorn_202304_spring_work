@@ -1,10 +1,10 @@
-package com.example.boot06.file.dao;
+package com.example.boot07.file.dao;
 
 import java.util.List;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import com.example.boot06.file.dto.FileDto;
+import com.example.boot07.file.dto.FileDto;
 
 @Repository
 public class FileDaoImpl implements FileDao{

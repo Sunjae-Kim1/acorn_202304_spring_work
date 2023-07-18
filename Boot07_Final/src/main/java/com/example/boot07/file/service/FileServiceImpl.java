@@ -1,22 +1,36 @@
-package com.example.boot06.file.service;
+package com.example.boot07.file.service;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-import com.example.boot06.exception.NotDeleteException;
-import com.example.boot06.file.dao.FileDao;
-import com.example.boot06.file.dto.FileDto;
+import com.example.boot07.exception.NotDeleteException;
+import com.example.boot07.file.dao.FileDao;
+import com.example.boot07.file.dto.FileDto;
 
 @Service
 public class FileServiceImpl implements FileService{
 	
 	@Autowired
 	private FileDao dao;
+	
+	// 다운로드 or 업로드 할 파일이 저장된 위치 얻어내기
+	@Value("${file.location}")
+	private String fileLocation;
 	
 	@Override
 	public void getList(HttpServletRequest request) {
@@ -110,28 +124,26 @@ public class FileServiceImpl implements FileService{
 	@Override
 	public void saveFile(FileDto dto, ModelAndView mView, HttpServletRequest request) {
 	      //업로드된 파일의 정보를 가지고 있는 MultipartFile 객체의 참조값 얻어오기 
-	      MultipartFile myFile=dto.getMyFile();
+	      MultipartFile myFile = dto.getMyFile();
 	      //원본 파일명
-	      String orgFileName=myFile.getOriginalFilename();
+	      String orgFileName = myFile.getOriginalFilename();
 	      //파일의 크기
-	      long fileSize=myFile.getSize();
+	      long fileSize = myFile.getSize();
 	      
-	      // webapp/resources/upload 폴더 까지의 실제 경로(서버의 파일시스템 상에서의 경로)
-	      String realPath=request.getServletContext().getRealPath("/resources/upload");
+	      String saveFileName = UUID.randomUUID().toString();
+	      
 	      //저장할 파일의 상세 경로
-	      String filePath=realPath+File.separator;
+	      String filePath = fileLocation + File.separator + saveFileName;
+	      
 	      //디렉토리를 만들 파일 객체 생성
 	      File upload=new File(filePath);
 	      if(!upload.exists()) {//만일 디렉토리가 존재하지 않으면 
 	         upload.mkdir(); //만들어 준다.
 	      }
-	      //저장할 파일 명을 구성한다.
-	      String saveFileName=
-	            System.currentTimeMillis()+orgFileName;
+	      
 	      try {
 	         //upload 폴더에 파일을 저장한다.
-	         myFile.transferTo(new File(filePath+saveFileName));
-	         System.out.println(filePath+saveFileName);
+	         myFile.transferTo(new File(filePath));
 	      }catch(Exception e) {
 	         e.printStackTrace();
 	      }
@@ -147,13 +159,7 @@ public class FileServiceImpl implements FileService{
 	      mView.addObject("dto", dto);
 	}
 
-	@Override
-	public void getFileData(int num, ModelAndView mView) {
-		// 다운로드할 파일의 정보를 얻어와서
-		FileDto dto = dao.getData(num);
-		// ModelAndView 객체에 담아준다.
-		mView.addObject("dto" , dto);
-	}
+	
 
 	@Override
 	public void deleteFile(int num, HttpServletRequest request) {
@@ -167,10 +173,55 @@ public class FileServiceImpl implements FileService{
 		}
 		// 파일 시스템에서 삭제
 		String saveFileName = dto.getSaveFileName();
-		String path = request.getServletContext().getRealPath("/resources/upload")+
-				File.separator+saveFileName;
+		
+		// 필드에 있는 파일이 있는 위치를 이용해서 경로를 구성하고
+		String path = fileLocation + File.separator + saveFileName;
+		
+		// 삭제
 		new File(path).delete();
+		
 		// DB 에서 파일 정보 삭제
 		dao.delete(num);
+	}
+
+	@Override
+	public ResponseEntity<InputStreamResource> getFileData(int num) throws FileNotFoundException, UnsupportedEncodingException {
+		
+		// 다운로드 해줄 파일의 정보를 DB 에서 읽어온다.
+		FileDto dto = dao.getData(num);
+		
+		// 다운로드 시켜줄 원본 파일 명
+		String encodedName = URLEncoder.encode(dto.getOrgFileName() , "utf-8");
+				
+		// 파일 명에 공복이 있는 경우 파일 명이 이상해지는 것을 방지
+		encodedName = encodedName.replaceAll("\\+", " ");
+				
+		// 응답 헤더 정보 ( 스프링 프레임워크에서 제공하는 클래스 ) 구성하기 ( 웹 브라우저에 알릴 정보 )
+		HttpHeaders headers = new HttpHeaders();
+				
+		// 파일을 다운로드 시텨 주겠다는 정보
+		headers.add(HttpHeaders.CONTENT_TYPE , "application/octet-stream");
+				
+		// 파일의 이름 정보 ( 웹 브라우저가 해당 정보를 이용해서 파일을 만들어 준다. )
+		headers.add(HttpHeaders.CONTENT_DISPOSITION , "attachment;filename=" + encodedName);
+				
+		// 파일의 크기 정보도 담아준다.
+		headers.setContentLength(dto.getFileSize());
+				
+		//  읽어들일 파일의 경로 구성
+		String filePath = fileLocation + File.separator + dto.getSaveFileName();
+				
+		// 파일에서 읽어들일 스트림 객체
+		InputStream is = new FileInputStream(filePath);
+				
+		// InputStreamResource 객체의 참조값을 얻어내기
+		InputStreamResource isr = new InputStreamResource(is);
+				
+		// ResponseEntity 객체의 참조값을 얻어내기
+		ResponseEntity<InputStreamResource> resEn = ResponseEntity.ok()
+			.headers(headers)
+			.body(isr);
+		
+		return resEn;
 	}
 }
